@@ -1,3 +1,5 @@
+import '../../../widgets/task_status_bar.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'download_options_panel.dart';
 import 'package:file_picker/file_picker.dart';
@@ -39,7 +41,6 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
     ref.read(downloadQueueProvider.notifier).state = true;
     setState(() {
       _batchRunning = true;
-      _logsExpanded = true;
       _stopQueue = false;
     });
     try {
@@ -214,7 +215,15 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
               trailing: Text(['等待', '下载中', '完成', '失败', '跳过'][task.status.index],
                   style: const TextStyle(fontSize: 12))),
       ])),
-      if (busy) const LinearProgressIndicator(minHeight: 2),
+      TaskStatusBar(
+        running: downloads.isDownloading,
+        status: downloads.progress.stage,
+        fraction: downloads.progress.fraction,
+        failed: downloads.progress.stage.contains('失败'),
+        details: downloads.isDownloading
+            ? '${downloads.progress.speed.isEmpty ? '速度暂不可用' : downloads.progress.speed} · ETA ${downloads.progress.eta.isEmpty ? '暂不可用' : downloads.progress.eta}'
+            : '',
+      ),
       const Divider(),
       Container(
           height: 34,
@@ -237,6 +246,13 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
                 icon: Icon(
                     _logsExpanded ? Icons.expand_more : Icons.expand_less,
                     size: 16)),
+            IconButton(
+                tooltip: '复制诊断日志',
+                onPressed: logs.isEmpty
+                    ? null
+                    : () =>
+                        Clipboard.setData(ClipboardData(text: logs.join('\n'))),
+                icon: const Icon(Icons.copy_outlined, size: 15)),
             TextButton(
                 onPressed: () => ref.read(appLogsProvider.notifier).clear(),
                 child: const Text('清空'))

@@ -1,3 +1,4 @@
+import '../widgets/task_status_bar.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -962,7 +963,11 @@ class _ExpertPageState extends ConsumerState<ExpertPage> {
                   child: SelectableText(_message,
                       style: TextStyle(fontSize: 12, color: c.primary))),
           ])),
-      if (job.running) const LinearProgressIndicator(minHeight: 2),
+      TaskStatusBar(
+          running: job.running,
+          status: job.status,
+          failed: job.status.contains('失败'),
+          details: job.running ? '本地 FFmpeg 正在处理，完成后会显示结果' : job.output ?? ''),
       const Divider(),
       Material(
           color: c.surfaceContainerLowest,
@@ -976,11 +981,6 @@ class _ExpertPageState extends ConsumerState<ExpertPage> {
                     const SizedBox(width: 8),
                     const Text('执行日志', style: TextStyle(fontSize: 12)),
                     const Spacer(),
-                    Flexible(
-                        child: Text(job.status,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 12, color: c.onSurfaceVariant))),
                     const SizedBox(width: 9),
                     Icon(
                         _logsExpanded

@@ -1,3 +1,4 @@
+import '../services/download_progress.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -662,22 +663,26 @@ class DownloadState {
   final bool isDownloading;
   final List<DownloadTask> tasks;
   final int? currentTaskIndex;
+  final DownloadProgress progress;
 
   const DownloadState({
     this.isDownloading = false,
     this.tasks = const [],
     this.currentTaskIndex,
+    this.progress = const DownloadProgress(stage: '等待下载'),
   });
 
   DownloadState copyWith({
     bool? isDownloading,
     List<DownloadTask>? tasks,
     int? currentTaskIndex,
+    DownloadProgress? progress,
   }) {
     return DownloadState(
       isDownloading: isDownloading ?? this.isDownloading,
       tasks: tasks ?? this.tasks,
       currentTaskIndex: currentTaskIndex,
+      progress: progress ?? this.progress,
     );
   }
 }
@@ -693,6 +698,9 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
     if (uri == null ||
         !['http', 'https'].contains(uri.scheme) ||
         uri.host.isEmpty) {
+      state = state.copyWith(
+          progress:
+              const DownloadProgress(stage: '下载失败：请输入有效的 HTTP 或 HTTPS 链接'));
       _ref.read(appLogsProvider.notifier).addError('请输入有效的 HTTP 或 HTTPS 链接');
       return;
     }
@@ -703,6 +711,8 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
     final logs = _ref.read(appLogsProvider.notifier);
 
     if (!settings.isConfigured) {
+      state = state.copyWith(
+          progress: const DownloadProgress(stage: '下载失败：请先配置下载工具和目录'));
       logs.addError('请先在设置中配置 yt-dlp、ffmpeg 路径和下载目录');
       return;
     }
@@ -724,6 +734,7 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
       isDownloading: true,
       tasks: [...state.tasks, task],
       currentTaskIndex: state.tasks.length,
+      progress: const DownloadProgress(),
     );
 
     logs.add('🚀 开始下载: $url');
@@ -739,23 +750,31 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
       final stdoutBuffer = StringBuffer();
       final stderrBuffer = StringBuffer();
 
+      void consume(String line, StringBuffer buffer) {
+        final progress = DownloadProgress.parse(line);
+        if (progress != null) {
+          if (progress.stage != state.progress.stage) {
+            logs.addInfo(progress.stage);
+          }
+          state = state.copyWith(
+              progress: progress, currentTaskIndex: state.currentTaskIndex);
+        } else {
+          buffer.writeln(line);
+          if (line.trim().isNotEmpty &&
+              !line.startsWith(VideoDownload.marker)) {
+            logs.add(line);
+          }
+        }
+      }
+
       final stdoutDone = process.stdout
           .transform(const Utf8Decoder(allowMalformed: true))
-          .forEach((data) {
-        stdoutBuffer.write(data);
-        if (data.trim().isNotEmpty) {
-          logs.add(data.trim());
-        }
-      });
-
+          .transform(const LineSplitter())
+          .forEach((line) => consume(line, stdoutBuffer));
       final stderrDone = process.stderr
           .transform(const Utf8Decoder(allowMalformed: true))
-          .forEach((data) {
-        stderrBuffer.write(data);
-        if (data.trim().isNotEmpty) {
-          logs.addWarning(data.trim());
-        }
-      });
+          .transform(const LineSplitter())
+          .forEach((line) => consume(line, stderrBuffer));
 
       final exitCode = await process.exitCode;
       await Future.wait([stdoutDone, stderrDone]);
@@ -793,6 +812,9 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
             skipped = true;
             logs.addInfo('未产生最终视频文件，任务可能被下载记录或自定义参数跳过；未标记为下载完成。');
           } else {
+            state = state.copyWith(
+                progress: const DownloadProgress(stage: '正在校验视频和音轨'),
+                currentTaskIndex: state.currentTaskIndex);
             for (final path in paths) {
               await VideoDownload.verify(settings.ffmpegPath!, path);
               logs.addSuccess('已校验视频和音轨：$path');
@@ -831,6 +853,12 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
       state = state.copyWith(
         isDownloading: false,
         tasks: updatedTasks,
+        progress: DownloadProgress(
+            stage: skipped
+                ? '任务已跳过'
+                : downloadSucceeded
+                    ? '下载完成'
+                    : '下载失败，请展开日志查看原因'),
         currentTaskIndex: null,
       );
     } catch (e) {
@@ -849,6 +877,7 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
       state = state.copyWith(
         isDownloading: false,
         tasks: updatedTasks,
+        progress: const DownloadProgress(stage: '下载失败，请展开日志查看原因'),
         currentTaskIndex: null,
       );
     }
@@ -915,6 +944,7 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
         'after_move:${VideoDownload.marker}%(filepath)j'
       ]);
     }
+    args.addAll(DownloadProgress.arguments);
     args.addAll(['--', url]);
     logs.addInfo(
         '格式: ${settings.format.name}, 画质: ${settings.quality.name}, 模式: ${settings.downloadMode.displayName}');

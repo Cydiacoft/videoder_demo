@@ -1,3 +1,4 @@
+import '../widgets/task_status_bar.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -495,7 +496,11 @@ class _ToolboxPageState extends ConsumerState<ToolboxPage> {
                         _output(operation, settings, job, directory)
                       ]));
       })),
-      if (job.running) const LinearProgressIndicator(minHeight: 2),
+      TaskStatusBar(
+          running: job.running,
+          status: job.status,
+          failed: job.status.contains('失败'),
+          details: job.running ? '本地 FFmpeg 正在处理，完成后会显示结果' : job.output ?? ''),
       const Divider(),
       Material(
           color: c.surfaceContainerLowest,
@@ -514,12 +519,6 @@ class _ToolboxPageState extends ConsumerState<ToolboxPage> {
                     const SizedBox(width: 10),
                     if (job.logs.isNotEmpty) StudioTag('${job.logs.length}'),
                     const Spacer(),
-                    Flexible(
-                        child: Text(job.status,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 12, color: c.onSurfaceVariant))),
                     const SizedBox(width: 10),
                     Icon(
                         _logExpanded
