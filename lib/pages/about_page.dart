@@ -14,6 +14,7 @@ class _AboutPageState extends State<AboutPage> {
   String _version = '';
   String _status = '检查是否有可用的新版本';
   String _notes = '';
+  String _releaseUrl = '${AppUpdate.repository}/releases';
   bool _checking = false;
   bool _available = false;
   @override
@@ -52,15 +53,19 @@ class _AboutPageState extends State<AboutPage> {
           _status = '暂无可用的公开正式版本，或发布源不可访问。';
           return;
         }
-        final latest = data['tag_name'] as String;
+        final latest = data['version'] as String;
+        _releaseUrl = AppUpdate.releaseUrl(data);
         _available = AppUpdate.compareVersions(latest, _version) > 0;
-        _status = _available ? '发现新版本 $latest' : '当前版本无需更新（最新发布：$latest）';
-        _notes = data['body'] as String? ?? '';
+        _status = AppUpdate.versionStatus(latest, _version);
+        _notes = data['body'] is String ? data['body'] as String : '';
       });
     } catch (error) {
       if (mounted) {
-        setState(() => _status =
-            error is HttpException ? error.message : '检查更新失败，请检查网络或稍后重试。');
+        setState(() => _status = error is HttpException
+            ? error.message
+            : error is FormatException
+                ? error.message
+                : '检查更新失败，请检查网络或稍后重试。');
       }
     } finally {
       if (mounted) setState(() => _checking = false);
@@ -104,8 +109,7 @@ class _AboutPageState extends State<AboutPage> {
                               label: Text(_checking ? '正在检查…' : '检查更新')),
                           if (_available)
                             OutlinedButton(
-                                onPressed: () => _open(
-                                    '${AppUpdate.repository}/releases/latest'),
+                                onPressed: () => _open(_releaseUrl),
                                 child: const Text('前往下载新版本')),
                         ]),
                         if (_notes.isNotEmpty) ...[

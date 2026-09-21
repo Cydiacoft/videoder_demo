@@ -73,3 +73,9 @@ flutter test --reporter expanded --timeout 120s
 本项目采用 **GNU General Public License v3.0（GPL-3.0-only）**，完整条款见 [LICENSE](LICENSE)，历史代码的版权声明保留在 [NOTICE](NOTICE)。
 
 FFmpeg、yt-dlp、Aria2、Flutter 及第三方依赖各自遵循其许可证。外部工具默认不随本项目分发；若制作包含这些工具的发行包，须同时遵守相应许可证及分发要求。
+
+### 发布版本编号
+
+应用与 GitHub Release 使用同一套日期版本，例如 `pubspec.yaml` 中的 `26.9.21+4` 对应标签 `v26.9.21+4`。同日再次发布时递增 `+` 后的构建号；更换日期时更新主版本并继续递增构建号。旧标签 `v26.9.21` 不包含构建号，只比较日期部分。
+
+请先更新 `pubspec.yaml` 再编译，发布标签应与安装包内版本一致。不要把 `1.x.x` 的安装包放在 `v26.x.x` 的标签下，也不要只修改发布标题。更新检查使用 GitHub 最新的公开正式 Release，草稿和预发布不作为正式更新。
