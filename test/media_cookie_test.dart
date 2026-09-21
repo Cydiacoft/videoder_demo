@@ -1,0 +1,65 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:videoader/services/media_command.dart';
+import 'package:videoader/plugins/yt_dlp/services/cookie_codec.dart';
+
+void main() {
+  group('Cookie import regression', () {
+    test('preserves HttpOnly, blank values and session expiry', () {
+      const row =
+          '#HttpOnly_.bilibili.com\tTRUE\t/\tTRUE\t0\tSESSDATA\ttoken==';
+      final text = CookieCodec.encode(
+          '# Netscape HTTP Cookie File\n$row\n.bilibili.com\tTRUE\t/\tFALSE\t0\tempty\t',
+          'bilibili.com');
+      expect(text, contains(row));
+      expect(text, contains('empty\t\n'));
+    });
+    test('header values containing equals signs are not truncated', () {
+      expect(
+          CookieCodec.encode(
+              'Cookie: session=abc==; uid=123', 'https://www.example.com/path'),
+          contains('session\tabc=='));
+    });
+    test('rejects empty, malformed file and domain', () {
+      for (final value in [
+        '',
+        'garbage',
+        '# Netscape HTTP Cookie File',
+        '.x.com\tTRUE\t/\tFALSE\tbad\tx\ty'
+      ]) {
+        expect(() => CookieCodec.encode(value, 'x.com'), throwsFormatException);
+      }
+      expect(() => CookieCodec.domain('https://'), throwsFormatException);
+      expect(() => CookieCodec.domain('bad domain.com'), throwsFormatException);
+    });
+  });
+  group('Media command validation', () {
+    test('validates time ranges and preserves fractional seconds', () {
+      expect(MediaCommand.parseTime('01:02:03.5'), 3723.5);
+      for (final time in ['NaN', '-1', '00:99:00', '1:2:3:4', '1.5:20']) {
+        expect(() => MediaCommand.parseTime(time), throwsFormatException);
+      }
+      expect(
+          () => MediaCommand.build(
+              operation: MediaOperation.trim,
+              input: 'a',
+              output: 'b',
+              start: '10',
+              end: '9'),
+          throwsFormatException);
+    });
+    test('protects original files and handles shell characters as arguments',
+        () {
+      expect(
+          () => MediaCommand.build(
+              operation: MediaOperation.convert, input: 'same', output: 'same'),
+          throwsFormatException);
+      final args = MediaCommand.build(
+          operation: MediaOperation.convert,
+          input: r'C:\folder with spaces\a&b.mp4',
+          output: 'output.mp4');
+      expect(args, contains('-n'));
+      expect(args[args.indexOf('-i') + 1], r'C:\folder with spaces\a&b.mp4');
+      expect(args, contains('0:a:0?'));
+    });
+  });
+}

@@ -1,5 +1,5 @@
 name: videoader
-description: A cross-platform video downloader tool.
+description: A desktop FFmpeg toolbox with an optional yt-dlp extension.
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -17,7 +17,6 @@ dependencies:
   path: ^1.9.0
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.3.5
-  webview_flutter: ^4.10.0
   url_launcher: ^6.3.1
   path_provider: ^2.1.0
 
@@ -31,3 +30,7 @@ dev_dependencies:
 # flutter 字段也是顶层配置
 flutter:
   uses-material-design: true
+  assets:
+    - pubspec.yaml
+    - LICENSE
+    - NOTICE

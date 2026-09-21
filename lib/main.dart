@@ -1,562 +1,304 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'pages/download_page.dart';
+import 'extensions/registry.dart';
+import 'extensions/toolbox_extension.dart';
 import 'pages/settings_page.dart';
-import 'theme/fluid_theme.dart';
+import 'pages/expert_page.dart';
+import 'pages/toolbox_page.dart';
+import 'providers/media_provider.dart';
+import 'providers/app_provider.dart';
+import 'services/media_command.dart';
+import 'theme/studio_theme.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: VideoaderApp(),
-    ),
-  );
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+        ['Videoader'], await rootBundle.loadString('LICENSE'));
+    yield LicenseEntryWithLineBreaks(
+        ['Videoader · 历史版权声明'], await rootBundle.loadString('NOTICE'));
+  });
+  runApp(const ProviderScope(child: VideoaderApp()));
 }
 
 class VideoaderApp extends StatefulWidget {
   const VideoaderApp({super.key});
-
   @override
   State<VideoaderApp> createState() => _VideoaderAppState();
 }
 
 class _VideoaderAppState extends State<VideoaderApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  void _setThemeMode(ThemeMode mode) {
-    setState(() {
-      _themeMode = mode;
-    });
-  }
-
+  ThemeMode _mode = ThemeMode.system;
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Videoader',
+  Widget build(BuildContext context) => MaterialApp(
+      title: 'Videoader · FFmpeg Studio',
       debugShowCheckedModeBanner: false,
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
-      themeMode: _themeMode,
+      theme: studioTheme(Brightness.light),
+      darkTheme: studioTheme(Brightness.dark),
+      themeMode: _mode,
       home: MainLayout(
-        themeMode: _themeMode,
-        onThemeChanged: _setThemeMode,
-      ),
-    );
-  }
-
-  ThemeData _buildLightTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: const ColorScheme.light(
-        primary: FluidColors.primary,
-        onPrimary: FluidColors.onPrimary,
-        primaryContainer: FluidColors.primaryContainer,
-        onPrimaryContainer: FluidColors.onPrimaryContainer,
-        secondary: FluidColors.secondaryContainer,
-        onSecondary: FluidColors.onSecondaryContainer,
-        secondaryContainer: FluidColors.secondaryContainer,
-        onSecondaryContainer: FluidColors.onSecondaryContainer,
-        tertiary: FluidColors.tertiary,
-        tertiaryContainer: FluidColors.tertiaryContainer,
-        onTertiaryContainer: FluidColors.onTertiaryContainer,
-        error: FluidColors.error,
-        errorContainer: FluidColors.errorContainer,
-        onErrorContainer: FluidColors.onErrorContainer,
-        surface: FluidColors.surface,
-        onSurface: FluidColors.onSurface,
-        onSurfaceVariant: FluidColors.onSurfaceVariant,
-        outlineVariant: FluidColors.outlineVariant,
-        surfaceContainerLowest: FluidColors.surfaceContainerLowest,
-        surfaceContainerLow: FluidColors.surfaceContainerLow,
-        surfaceContainerHighest: FluidColors.surfaceContainerHighest,
-      ),
-      scaffoldBackgroundColor: FluidColors.surface,
-      appBarTheme: const AppBarTheme(
-        centerTitle: false,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: FluidColors.surfaceContainerLow,
-        foregroundColor: FluidColors.onSurface,
-        titleTextStyle: TextStyle(
-          fontFamily: 'Manrope',
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          letterSpacing: -0.5,
-          color: FluidColors.onSurface,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: FluidColors.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(
-          borderRadius: FluidRadius.lgRadius,
-        ),
-        margin: EdgeInsets.zero,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: FluidColors.surfaceContainerLow,
-        border: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: TextStyle(
-          color: FluidColors.onSurfaceVariant.withValues(alpha: 0.6),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: FluidRadius.lgRadius,
-          ),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: FluidRadius.lgRadius,
-          ),
-          backgroundColor: FluidColors.primary,
-          foregroundColor: FluidColors.onPrimary,
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: FluidRadius.lgRadius,
-          ),
-          side: BorderSide(
-            color: FluidColors.outlineVariant.withValues(alpha: 0.3),
-          ),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 72,
-        elevation: 0,
-        backgroundColor: FluidColors.surface,
-        indicatorColor: FluidColors.secondaryContainer,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      ),
-      navigationRailTheme: NavigationRailThemeData(
-        elevation: 0,
-        backgroundColor: FluidColors.surfaceContainerLow,
-        indicatorColor: FluidColors.secondaryContainer,
-        labelType: NavigationRailLabelType.all,
-      ),
-      dividerTheme: DividerThemeData(
-        color: FluidColors.outlineVariant.withValues(alpha: 0.15),
-        thickness: 1,
-        space: 1,
-      ),
-      snackBarTheme: SnackBarThemeData(
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: FluidRadius.mdRadius,
-        ),
-        backgroundColor: FluidColors.onSurface,
-      ),
-    );
-  }
-
-  ThemeData _buildDarkTheme() {
-    const darkPrimary = Color(0xFFb4c5f9);
-    const darkOnSurface = Color(0xFFe3e2e8);
-    const darkSurface = Color(0xFF1a1b1f);
-    const darkSurfaceContainerLow = Color(0xFF232428);
-    const darkSurfaceContainerHighest = Color(0xFF3d3e44);
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: darkPrimary,
-        onPrimary: Color(0xFF182a55),
-        primaryContainer: Color(0xFF374874),
-        onPrimaryContainer: Color(0xFFd4e0ff),
-        secondary: Color(0xFFc4c9e0),
-        onSecondary: Color(0xFF2f3147),
-        tertiary: Color(0xFFd3bae9),
-        tertiaryContainer: Color(0xFF5c4870),
-        onTertiaryContainer: Color(0xFFf4dcff),
-        error: Color(0xFFffb4ab),
-        errorContainer: Color(0xFF93000a),
-        onErrorContainer: Color(0xFFffdad6),
-        surface: darkSurface,
-        onSurface: darkOnSurface,
-        surfaceContainerLowest: Color(0xFF0f0f12),
-        surfaceContainerLow: darkSurfaceContainerLow,
-        surfaceContainerHighest: darkSurfaceContainerHighest,
-      ),
-      scaffoldBackgroundColor: darkSurface,
-      appBarTheme: AppBarTheme(
-        centerTitle: false,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: darkSurfaceContainerLow,
-        foregroundColor: darkOnSurface,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'Manrope',
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          letterSpacing: -0.5,
-          color: darkOnSurface,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: darkSurfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: FluidRadius.lgRadius,
-        ),
-        margin: EdgeInsets.zero,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: darkSurfaceContainerHighest.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: FluidRadius.smRadius,
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: FluidRadius.lgRadius,
-          ),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: FluidRadius.lgRadius,
-          ),
-          backgroundColor: darkPrimary,
-          foregroundColor: const Color(0xFF182a55),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 72,
-        elevation: 0,
-        backgroundColor: darkSurface,
-        indicatorColor: const Color(0xFF3d3e44),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontFamily: 'Manrope',
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-              letterSpacing: 0.5,
-            );
-          }
-          return TextStyle(
-            fontFamily: 'Manrope',
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
-            letterSpacing: 0.5,
-            color: darkOnSurface.withValues(alpha: 0.7),
-          );
-        }),
-      ),
-      navigationRailTheme: NavigationRailThemeData(
-        elevation: 0,
-        backgroundColor: darkSurfaceContainerLow,
-        indicatorColor: darkSurfaceContainerHighest,
-        labelType: NavigationRailLabelType.all,
-      ),
-    );
-  }
+          themeMode: _mode,
+          onThemeChanged: (mode) => setState(() => _mode = mode)));
 }
 
-class MainLayout extends StatefulWidget {
+class MainLayout extends ConsumerStatefulWidget {
   final ThemeMode themeMode;
-  final Function(ThemeMode) onThemeChanged;
-
-  const MainLayout({
-    super.key,
-    required this.themeMode,
-    required this.onThemeChanged,
-  });
-
+  final ValueChanged<ThemeMode> onThemeChanged;
+  const MainLayout(
+      {super.key, required this.themeMode, required this.onThemeChanged});
   @override
-  State<MainLayout> createState() => _MainLayoutState();
+  ConsumerState<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = const [
-    DownloadPage(),
-    SettingsPage(),
-  ];
-
-  void _toggleTheme() {
-    final newMode = widget.themeMode == ThemeMode.light
-        ? ThemeMode.dark
-        : widget.themeMode == ThemeMode.dark
-            ? ThemeMode.system
-            : ThemeMode.light;
-    widget.onThemeChanged(newMode);
-  }
-
-  IconData _getThemeIcon() {
-    switch (widget.themeMode) {
-      case ThemeMode.light:
-        return Icons.light_mode;
-      case ThemeMode.dark:
-        return Icons.dark_mode;
-      default:
-        return Icons.brightness_auto;
+class _MainLayoutState extends ConsumerState<MainLayout> {
+  int _selected = 0;
+  void _select(int index) {
+    final job = ref.read(mediaProvider);
+    if (index < 4 &&
+        job.running &&
+        ref.read(mediaOperationProvider) != MediaOperation.values[index]) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('当前任务完成或取消后，可切换处理工具。')));
+      return;
     }
-  }
-
-  String _getThemeLabel() {
-    switch (widget.themeMode) {
-      case ThemeMode.light:
-        return '浅色';
-      case ThemeMode.dark:
-        return '深色';
-      default:
-        return '跟随系统';
+    if (index < 4) {
+      ref.read(mediaOperationProvider.notifier).state =
+          MediaOperation.values[index];
     }
+    setState(() => _selected = index);
   }
 
+  Widget _nav(int index, String label, IconData icon, bool narrow) {
+    final c = Theme.of(context).colorScheme;
+    final active = _selected == index;
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        child: Tooltip(
+            message: label,
+            child: Material(
+                color: active ? c.primaryContainer : Colors.transparent,
+                borderRadius: BorderRadius.circular(9),
+                child: InkWell(
+                    borderRadius: BorderRadius.circular(9),
+                    onTap: () => _select(index),
+                    child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(children: [
+                          Icon(icon,
+                              size: 18,
+                              color: active ? c.primary : c.onSurfaceVariant),
+                          if (!narrow) ...[
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Text(label,
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: active
+                                            ? FontWeight.w600
+                                            : FontWeight.w400,
+                                        color: active
+                                            ? c.primary
+                                            : c.onSurfaceVariant))),
+                            if (active)
+                              Container(
+                                  width: 5,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                      color: c.primary, shape: BoxShape.circle))
+                          ]
+                        ]))))));
+  }
+
+  Widget _caption(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 12, 10),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              letterSpacing: 1)));
   @override
   Widget build(BuildContext context) {
-    final isWideScreen = MediaQuery.of(context).size.width >= 800;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    if (isWideScreen) {
-      return Scaffold(
-        body: Row(
-          children: [
-            Container(
-              width: 80,
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                border: Border(
-                  right: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: FluidGradients.primaryButton,
-                      borderRadius: FluidRadius.mdRadius,
-                    ),
-                    child: const Icon(
-                      Icons.download_rounded,
-                      color: FluidColors.onPrimary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Videoader',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildNavItem(
-                    index: 0,
-                    icon: Icons.download_outlined,
-                    selectedIcon: Icons.download,
-                    label: '下载',
-                  ),
-                  const SizedBox(height: 8),
-                  _buildNavItem(
-                    index: 1,
-                    icon: Icons.settings_outlined,
-                    selectedIcon: Icons.settings,
-                    label: '设置',
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(_getThemeIcon()),
-                    tooltip: '主题: ${_getThemeLabel()}',
-                    onPressed: _toggleTheme,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                color: colorScheme.surface,
-                child: _pages[_selectedIndex],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
+    final c = Theme.of(context).colorScheme;
+    final job = ref.watch(mediaProvider);
+    final configured =
+        ref.watch(appSettingsProvider).ffmpegPath?.isNotEmpty == true;
+    final enabled = ref.watch(extensionManagerProvider).enabled;
+    final pages = bundledExtensions
+        .where((e) => enabled.contains(e.id))
+        .expand((e) => e.pages)
+        .toList();
+    if (_selected >= 6 + pages.length) _selected = 4;
+    final narrow = MediaQuery.sizeOf(context).width < 860;
     return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              offset: const Offset(0, -8),
-              blurRadius: 24,
-              color: FluidColors.onSurface.withValues(alpha: 0.06),
-            ),
-          ],
-        ),
-        child: SafeArea(
+        body: Column(children: [
+      Expanded(
+          child: Row(children: [
+        SizedBox(
+            width: narrow ? 72 : 218,
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                      padding: EdgeInsets.fromLTRB(narrow ? 18 : 24, 30, 14, 8),
+                      child: Row(children: [
+                        Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF7B88DD),
+                                      Color(0xFF535AA0)
+                                    ]),
+                                borderRadius: BorderRadius.circular(11)),
+                            child: const Icon(Icons.multitrack_audio,
+                                color: Colors.white, size: 23)),
+                        if (!narrow) ...[
+                          const SizedBox(width: 11),
+                          const Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text('Videoader',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.5)),
+                                SizedBox(height: 2),
+                                Text('FFmpeg Studio',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF8C91A8),
+                                        letterSpacing: 0.5))
+                              ]))
+                        ],
+                      ])),
+                  Expanded(
+                      child: ListView(padding: EdgeInsets.zero, children: [
+                    if (!narrow)
+                      _caption('工作空间')
+                    else
+                      const SizedBox(height: 30),
+                    _nav(0, '格式转换', Icons.swap_horiz_rounded, narrow),
+                    _nav(1, '提取音频', Icons.graphic_eq_rounded, narrow),
+                    _nav(2, '视频压缩', Icons.compress_rounded, narrow),
+                    _nav(3, '视频剪切', Icons.content_cut_rounded, narrow),
+                    _nav(5, '专业工作台', Icons.terminal_rounded, narrow),
+                    if (pages.isNotEmpty) ...[
+                      if (!narrow)
+                        _caption('扩展工具')
+                      else
+                        const SizedBox(height: 20),
+                      for (var i = 0; i < pages.length; i++)
+                        _nav(i + 6, pages[i].label, pages[i].icon, narrow)
+                    ],
+                  ])),
+                  if (!narrow)
+                    Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        child: Container(
+                            padding: const EdgeInsets.all(13),
+                            decoration: BoxDecoration(
+                                color: c.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Icon(Icons.memory_rounded,
+                                        size: 15, color: c.primary),
+                                    const SizedBox(width: 7),
+                                    const Text('本地媒体引擎',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600))
+                                  ]),
+                                  const SizedBox(height: 7),
+                                  Text(
+                                      configured
+                                          ? 'FFmpeg 已配置'
+                                          : '添加 FFmpeg 即可开始',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: c.onSurfaceVariant))
+                                ]))),
+                  _nav(4, '设置与扩展', Icons.tune_rounded, narrow),
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                      child: Row(
+                          mainAxisAlignment: narrow
+                              ? MainAxisAlignment.center
+                              : MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (!narrow)
+                              Text('外观',
+                                  style: TextStyle(
+                                      fontSize: 12, color: c.onSurfaceVariant)),
+                            IconButton(
+                                tooltip: '切换浅色 / 深色',
+                                onPressed: () => widget.onThemeChanged(
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? ThemeMode.light
+                                        : ThemeMode.dark),
+                                icon: Icon(
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Icons.light_mode_outlined
+                                        : Icons.dark_mode_outlined,
+                                    size: 17))
+                          ])),
+                ])),
+        Expanded(
+            child: Container(
+                margin: const EdgeInsets.fromLTRB(0, 14, 14, 0),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                    color: c.surface,
+                    border: Border.all(color: c.outlineVariant),
+                    borderRadius: BorderRadius.circular(18)),
+                child: IndexedStack(
+                    index: _selected < 4 ? 0 : _selected - 3,
+                    children: [
+                      TickerMode(
+                          enabled: _selected < 4,
+                          child: ToolboxPage(onOpenSettings: () => _select(4))),
+                      TickerMode(
+                          enabled: _selected == 4, child: const SettingsPage()),
+                      TickerMode(
+                          enabled: _selected == 5, child: const ExpertPage()),
+                      for (var i = 0; i < pages.length; i++)
+                        TickerMode(
+                            key: ValueKey(pages[i].id),
+                            enabled: _selected == i + 6,
+                            child: pages[i].build()),
+                    ]))),
+      ])),
+      SizedBox(
+          height: 30,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildBottomNavItem(
-                  index: 0,
-                  icon: Icons.download_outlined,
-                  selectedIcon: Icons.download,
-                  label: '下载',
-                ),
-                _buildBottomNavItem(
-                  index: 1,
-                  icon: Icons.settings_outlined,
-                  selectedIcon: Icons.settings,
-                  label: '设置',
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required int index,
-    required IconData icon,
-    required IconData selectedIcon,
-    required String label,
-  }) {
-    final isSelected = _selectedIndex == index;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
-      child: Container(
-        width: 64,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? colorScheme.secondaryContainer : Colors.transparent,
-          borderRadius: FluidRadius.mdRadius,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? selectedIcon : icon,
-              color: isSelected
-                  ? colorScheme.onSecondaryContainer
-                  : colorScheme.onSurfaceVariant,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 11,
-                color: isSelected
-                    ? colorScheme.onSecondaryContainer
-                    : colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavItem({
-    required int index,
-    required IconData icon,
-    required IconData selectedIcon,
-    required String label,
-  }) {
-    final isSelected = _selectedIndex == index;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedIndex = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.secondaryContainer
-                : Colors.transparent,
-            borderRadius: FluidRadius.lgRadius,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isSelected ? selectedIcon : icon,
-                color: isSelected
-                    ? colorScheme.onSecondaryContainer
-                    : colorScheme.onSurfaceVariant,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Manrope',
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                  color: isSelected
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(children: [
+                Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: job.running
+                            ? c.primary
+                            : c.onSurfaceVariant.withValues(alpha: 0.5))),
+                const SizedBox(width: 7),
+                Expanded(
+                    child: Text(job.running ? job.status : '就绪',
+                        style: TextStyle(
+                            fontSize: 12, color: c.onSurfaceVariant))),
+                Text('在你的设备上处理',
+                    style: TextStyle(fontSize: 12, color: c.onSurfaceVariant))
+              ])))
+    ]));
   }
 }

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.  
 本项目的重要变更都会记录在这里。
 
+## [Unreleased]
+
+- 转为以 FFmpeg 为核心的桌面工具箱，yt-dlp 作为可选内置扩展。
+- 加入视频/音频格式转换、专业参数、视频向导和音频转换/剪切/合并/响度向导。
+- 增加浏览器 Cookie 来源、Cookie 文件管理、下载参数及 yt-dlp 更新。
+- 重做桌面主题、分组设置与关于/检查更新页面。
+- 增加媒体实测、配置与界面回归，修正 Flutter CI 和便携构建脚本。
+- 清理过时工作日志、发布文档与旧主题；项目许可证改为 GPL-3.0-only。
+
 ## [v15] - 2026-03-26
 
 ### Added / 新增

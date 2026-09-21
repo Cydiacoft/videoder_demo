@@ -60,3 +60,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local application state, credentials and temporary outputs
+/release/
+/WORK_LOG.md
+/cookies/
+**/cookies*.txt
+**/cookies*.json
+.env
+.env.*
+!.env.example
+/test/failures/
+/coverage/
+*.tmp
