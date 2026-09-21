@@ -62,7 +62,7 @@ void main() {
     await tester.tap(find.text('关于 Videoader'));
     await tester.pumpAndSettle();
     expect(find.text('检查更新'), findsOneWidget);
-    expect(find.text('版本 26.9.21+4'), findsOneWidget);
+    expect(find.text('版本 26.9.21+5'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byType(Switch));
@@ -76,7 +76,7 @@ void main() {
     await tester.tap(find.byTooltip('展开下载日志'));
     await tester.pumpAndSettle();
     expect(find.text('等待下载任务…'), findsOneWidget);
-    await tester.tap(find.byTooltip('收起下载日志'));
+    await tester.tap(find.byTooltip('关闭日志面板'));
     await tester.pumpAndSettle();
     expect(find.text('等待下载任务…'), findsNothing);
     expect(find.text('等待下载'), findsOneWidget);
@@ -215,7 +215,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 150));
     });
     await tester.pumpAndSettle();
-    expect(find.text('版本 26.9.21+4'), findsOneWidget);
+    expect(find.text('版本 26.9.21+5'), findsOneWidget);
     await expectLater(find.byType(MaterialApp),
         matchesGoldenFile('../docs/screenshots/about.png'));
     await tester.pageBack();

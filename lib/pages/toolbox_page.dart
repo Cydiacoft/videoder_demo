@@ -1,3 +1,4 @@
+import '../widgets/diagnostic_panel.dart';
 import '../widgets/task_status_bar.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -459,94 +460,65 @@ class _ToolboxPageState extends ConsumerState<ToolboxPage> {
       '在画质与体积之间，找到合适的平衡。',
       '保留想要的片段，让素材恰到好处。'
     ];
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Padding(
-          padding: const EdgeInsets.fromLTRB(28, 28, 28, 22),
-          child: Row(children: [
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(operation.label,
-                      style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  Text(descriptions[operation.index],
-                      style: TextStyle(fontSize: 12, color: c.onSurfaceVariant))
-                ])),
-            const SizedBox(width: 12),
-            const StudioTag('本地处理', icon: Icons.laptop_rounded)
-          ])),
-      Expanded(child: LayoutBuilder(builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 820;
-        return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
-            child: wide
-                ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: _source(job, directory)),
-                    const SizedBox(width: 20),
-                    SizedBox(
-                        width: 296,
-                        child: _output(operation, settings, job, directory))
-                  ])
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                        _source(job, directory),
-                        const SizedBox(height: 18),
-                        _output(operation, settings, job, directory)
-                      ]));
-      })),
-      TaskStatusBar(
-          running: job.running,
-          status: job.status,
-          failed: job.status.contains('失败'),
-          details: job.running ? '本地 FFmpeg 正在处理，完成后会显示结果' : job.output ?? ''),
-      const Divider(),
-      Material(
-          color: c.surfaceContainerLowest,
-          child: InkWell(
-              onTap: () => setState(() => _logExpanded = !_logExpanded),
-              child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  child: Row(children: [
-                    Icon(Icons.terminal_rounded,
-                        size: 15, color: c.onSurfaceVariant),
-                    const SizedBox(width: 9),
-                    Text('任务日志',
-                        style:
-                            TextStyle(fontSize: 12, color: c.onSurfaceVariant)),
-                    const SizedBox(width: 10),
-                    if (job.logs.isNotEmpty) StudioTag('${job.logs.length}'),
-                    const Spacer(),
-                    const SizedBox(width: 10),
-                    Icon(
-                        _logExpanded
-                            ? Icons.keyboard_arrow_down
-                            : Icons.keyboard_arrow_up,
-                        size: 16,
-                        color: c.onSurfaceVariant)
-                  ])))),
-      if (_logExpanded)
-        Container(
-            height: 145,
-            color: c.surfaceContainerLowest,
-            child: SingleChildScrollView(
-                reverse: true,
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: SelectableText(
-                    job.logs.isEmpty ? '暂时没有日志' : job.logs.join('\n'),
-                    style: TextStyle(
-                        fontFamily: 'Consolas',
-                        fontFamilyFallback: const [
-                          'Microsoft YaHei UI',
-                          'Microsoft YaHei',
-                          'PingFang SC',
-                          'Noto Sans CJK SC'
-                        ],
-                        fontSize: 12,
-                        color: c.onSurfaceVariant)))),
-    ]);
+    return DiagnosticPanel(
+        expanded: _logExpanded,
+        logs: job.logs,
+        title: '任务日志',
+        emptyText: '暂时没有日志',
+        onClose: () => setState(() => _logExpanded = false),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+              padding: const EdgeInsets.fromLTRB(28, 28, 28, 22),
+              child: Row(children: [
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(operation.label,
+                          style: Theme.of(context).textTheme.titleLarge),
+                      const SizedBox(height: 8),
+                      Text(descriptions[operation.index],
+                          style: TextStyle(
+                              fontSize: 12, color: c.onSurfaceVariant))
+                    ])),
+                const SizedBox(width: 12),
+                DiagnosticButton(
+                    expanded: _logExpanded,
+                    title: '任务日志',
+                    onPressed: () =>
+                        setState(() => _logExpanded = !_logExpanded))
+              ])),
+          Expanded(child: LayoutBuilder(builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 820;
+            return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
+                child: wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                            Expanded(child: _source(job, directory)),
+                            const SizedBox(width: 20),
+                            SizedBox(
+                                width: 296,
+                                child: _output(
+                                    operation, settings, job, directory))
+                          ])
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                            _source(job, directory),
+                            const SizedBox(height: 18),
+                            _output(operation, settings, job, directory)
+                          ]));
+          })),
+          TaskStatusBar(
+              running: job.running,
+              status: job.status,
+              failed: job.status.contains('失败'),
+              details:
+                  job.running ? '本地 FFmpeg 正在处理，完成后会显示结果' : job.output ?? ''),
+        ]));
   }
 }
 

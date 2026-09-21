@@ -29,7 +29,9 @@ class TaskStatusBar extends StatelessWidget {
                   ? Icons.error_outline
                   : running
                       ? Icons.timelapse
-                      : Icons.task_alt,
+                      : status.contains('完成')
+                          ? Icons.task_alt
+                          : Icons.info_outline,
               size: 17,
               color: failed ? colors.error : colors.primary),
           const SizedBox(width: 9),
