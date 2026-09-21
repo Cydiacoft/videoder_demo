@@ -261,22 +261,27 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     color: c.surface,
                     border: Border.all(color: c.outlineVariant),
                     borderRadius: BorderRadius.circular(18)),
-                child: IndexedStack(
-                    index: _selected < 4 ? 0 : _selected - 3,
-                    children: [
-                      TickerMode(
-                          enabled: _selected < 4,
-                          child: ToolboxPage(onOpenSettings: () => _select(4))),
-                      TickerMode(
-                          enabled: _selected == 4, child: const SettingsPage()),
-                      TickerMode(
-                          enabled: _selected == 5, child: const ExpertPage()),
-                      for (var i = 0; i < pages.length; i++)
-                        TickerMode(
-                            key: ValueKey(pages[i].id),
-                            enabled: _selected == i + 6,
-                            child: pages[i].build()),
-                    ]))),
+                child: Material(
+                    type: MaterialType.transparency,
+                    child: IndexedStack(
+                        index: _selected < 4 ? 0 : _selected - 3,
+                        children: [
+                          TickerMode(
+                              enabled: _selected < 4,
+                              child: ToolboxPage(
+                                  onOpenSettings: () => _select(4))),
+                          TickerMode(
+                              enabled: _selected == 4,
+                              child: const SettingsPage()),
+                          TickerMode(
+                              enabled: _selected == 5,
+                              child: const ExpertPage()),
+                          for (var i = 0; i < pages.length; i++)
+                            TickerMode(
+                                key: ValueKey(pages[i].id),
+                                enabled: _selected == i + 6,
+                                child: pages[i].build()),
+                        ])))),
       ])),
       SizedBox(
           height: 30,
