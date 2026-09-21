@@ -83,8 +83,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     borderRadius: BorderRadius.circular(9),
                     onTap: () => _select(index),
                     child: Container(
-                        height: 42,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        height: 37,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: narrow ? 10 : 12),
                         child: Row(children: [
                           Icon(icon,
                               size: 18,
@@ -112,7 +113,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   }
 
   Widget _caption(String text) => Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 12, 10),
+      padding: const EdgeInsets.fromLTRB(20, 18, 12, 8),
       child: Text(text,
           style: TextStyle(
               fontSize: 12,
@@ -136,12 +137,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       Expanded(
           child: Row(children: [
         SizedBox(
-            width: narrow ? 72 : 218,
+            width: narrow ? 64 : 202,
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                      padding: EdgeInsets.fromLTRB(narrow ? 18 : 24, 30, 14, 8),
+                      padding: EdgeInsets.fromLTRB(narrow ? 14 : 20, 22, 12, 4),
                       child: Row(children: [
                         Container(
                             width: 36,
@@ -155,8 +156,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                                       Color(0xFF535AA0)
                                     ]),
                                 borderRadius: BorderRadius.circular(11)),
-                            child: const Icon(Icons.multitrack_audio,
-                                color: Colors.white, size: 23)),
+                            child: Image.asset('assets/branding/app_icon.png')),
                         if (!narrow) ...[
                           const SizedBox(width: 11),
                           const Expanded(
@@ -197,13 +197,15 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                         _nav(i + 6, pages[i].label, pages[i].icon, narrow)
                     ],
                   ])),
+                  const Divider(indent: 16, endIndent: 16, height: 18),
                   if (!narrow)
                     Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
                         child: Container(
                             padding: const EdgeInsets.all(13),
                             decoration: BoxDecoration(
-                                color: c.surfaceContainerLow,
+                                color: c.surfaceContainerHighest,
+                                border: Border.all(color: c.outlineVariant),
                                 borderRadius: BorderRadius.circular(10)),
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +230,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                                 ]))),
                   _nav(4, '设置与扩展', Icons.tune_rounded, narrow),
                   Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+                      padding: EdgeInsets.fromLTRB(
+                          narrow ? 8 : 16, 6, narrow ? 8 : 16, 12),
                       child: Row(
                           mainAxisAlignment: narrow
                               ? MainAxisAlignment.center
@@ -293,9 +296,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     height: 5,
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: job.running
-                            ? c.primary
-                            : c.onSurfaceVariant.withValues(alpha: 0.5))),
+                        color:
+                            job.running ? c.primary : const Color(0xFF29A36A))),
                 const SizedBox(width: 7),
                 Expanded(
                     child: Text(job.running ? job.status : '就绪',

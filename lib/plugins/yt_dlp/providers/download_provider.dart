@@ -10,6 +10,7 @@ import '../models/download_task.dart';
 import '../services/cookie_codec.dart';
 import '../services/download_options.dart';
 import '../services/browser_cookies.dart';
+import '../services/video_download.dart';
 import '../../../services/tool_process.dart';
 import '../../../providers/app_provider.dart' as core;
 
@@ -770,33 +771,61 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
         }
       }
 
-      final downloadSucceeded = exitCode == 0;
+      var downloadSucceeded = exitCode == 0;
       String? errorMessage;
 
       if (exitCode != 0) {
-        errorMessage = 'Exit code: $exitCode';
+        final cookieHelp =
+            BrowserCookies.failureHelp(fullOutput, settings.options);
+        errorMessage = cookieHelp ?? 'Exit code: $exitCode';
+        if (cookieHelp != null) logs.addWarning(cookieHelp);
         if (fullOutput.contains('412')) {
           logs.addWarning(
               '站点返回 HTTP 412：请更新 yt-dlp，检查对应站点 Cookie 是否有效，稍后再试。更换下载器无法解决元数据请求被拒绝的问题。');
         }
       }
 
+      var skipped = false;
+      if (downloadSucceeded && settings.format == DownloadFormat.video) {
+        try {
+          final paths = VideoDownload.outputPaths(stdoutBuffer.toString());
+          if (paths.isEmpty) {
+            skipped = true;
+            logs.addInfo('未产生最终视频文件，任务可能被下载记录或自定义参数跳过；未标记为下载完成。');
+          } else {
+            for (final path in paths) {
+              await VideoDownload.verify(settings.ffmpegPath!, path);
+              logs.addSuccess('已校验视频和音轨：$path');
+            }
+          }
+        } catch (error) {
+          downloadSucceeded = false;
+          errorMessage = '成品校验失败：$error';
+          logs.addError(errorMessage);
+        }
+      }
+
       final updatedTasks = state.tasks.map((t) {
         if (t.id == taskId) {
           return t.copyWith(
-            status: downloadSucceeded
-                ? DownloadStatus.completed
-                : DownloadStatus.failed,
+            status: skipped
+                ? DownloadStatus.skipped
+                : downloadSucceeded
+                    ? DownloadStatus.completed
+                    : DownloadStatus.failed,
             errorMessage: errorMessage,
           );
         }
         return t;
       }).toList();
 
-      if (downloadSucceeded) {
+      if (skipped) {
+        logs.addInfo('本次任务已跳过');
+      } else if (downloadSucceeded) {
         logs.addSuccess('下载完成！');
       } else {
-        logs.addError('下载失败，退出代码: $exitCode');
+        logs.addError(
+            exitCode == 0 ? '文件未通过音视频校验，请查看上方原因' : '下载失败，退出代码: $exitCode');
       }
 
       state = state.copyWith(
@@ -873,11 +902,19 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
         break;
       case DownloadFormat.video:
         _addVideoQualityArgs(args, settings.quality);
+        args.addAll(['--merge-output-format', 'mkv']);
         break;
     }
 
     args.addAll(
         DownloadOptions.build(Map.of(settings.options)..remove('output')));
+    if (settings.format == DownloadFormat.video) {
+      args.addAll([
+        '--no-simulate',
+        '--print',
+        'after_move:${VideoDownload.marker}%(filepath)j'
+      ]);
+    }
     args.addAll(['--', url]);
     logs.addInfo(
         '格式: ${settings.format.name}, 画质: ${settings.quality.name}, 模式: ${settings.downloadMode.displayName}');
@@ -886,34 +923,16 @@ class DownloadNotifier extends StateNotifier<DownloadState> {
   }
 
   void _addVideoQualityArgs(List<String> args, VideoQuality quality) {
-    switch (quality) {
-      case VideoQuality.p2160:
-        args.addAll(
-            ['-f', 'bestvideo[height<=2160]+bestaudio/best[height<=2160]']);
-        break;
-      case VideoQuality.p1440:
-        args.addAll(
-            ['-f', 'bestvideo[height<=1440]+bestaudio/best[height<=1440]']);
-        break;
-      case VideoQuality.p1080:
-        args.addAll(
-            ['-f', 'bestvideo[height<=1080]+bestaudio/best[height<=1080]']);
-        break;
-      case VideoQuality.p720:
-        args.addAll(
-            ['-f', 'bestvideo[height<=720]+bestaudio/best[height<=720]']);
-        break;
-      case VideoQuality.p480:
-        args.addAll(
-            ['-f', 'bestvideo[height<=480]+bestaudio/best[height<=480]']);
-        break;
-      case VideoQuality.p360:
-        args.addAll(
-            ['-f', 'bestvideo[height<=360]+bestaudio/best[height<=360]']);
-        break;
-      case VideoQuality.best:
-        break;
-    }
+    final height = switch (quality) {
+      VideoQuality.best => null,
+      VideoQuality.p2160 => 2160,
+      VideoQuality.p1440 => 1440,
+      VideoQuality.p1080 => 1080,
+      VideoQuality.p720 => 720,
+      VideoQuality.p480 => 480,
+      VideoQuality.p360 => 360,
+    };
+    args.addAll(['-f', VideoDownload.selector(height)]);
   }
 
   void removeHistory(String taskId) {

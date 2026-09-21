@@ -2,7 +2,7 @@ name: videoader
 description: A desktop FFmpeg toolbox with an optional yt-dlp extension.
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -34,3 +34,4 @@ flutter:
     - pubspec.yaml
     - LICENSE
     - NOTICE
+    - assets/branding/app_icon.png

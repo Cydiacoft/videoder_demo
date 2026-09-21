@@ -74,6 +74,19 @@ class _BrowserCookiePanelState extends ConsumerState<BrowserCookiePanel> {
                     const SizedBox(height: 12),
                     const Text(
                         'Windows 下 Chrome/Edge 的加密或文件占用可能导致读取失败，可尝试 Firefox 或保留手动导入。浏览器模式优先于下面保存的 Cookie。'),
+                    const ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: Text('读取失败怎么办？', style: TextStyle(fontSize: 13)),
+                      children: [
+                        Padding(
+                            padding: EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              '无法复制数据库：先保存网页中的工作，完全退出浏览器，并检查任务管理器中的后台进程。Edge 可关闭“启动增强”和关闭后的后台运行，再退出。\n\n'
+                              '解密失败：更新 yt-dlp；仍失败可在 Firefox 登录同一网站后改用 Firefox。\n\n'
+                              '手动导入：导入 cookies.txt 后，将上方来源改为“手动导入的 Cookie”并应用，才能使用导入文件。',
+                            ))
+                      ],
+                    ),
                   ],
                   const SizedBox(height: 12),
                   Align(

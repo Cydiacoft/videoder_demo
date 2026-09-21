@@ -74,8 +74,8 @@ class _AboutPageState extends State<AboutPage> {
             child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 760),
                 child: ListView(padding: const EdgeInsets.all(28), children: [
-                  Icon(Icons.multitrack_audio,
-                      size: 56, color: Theme.of(context).colorScheme.primary),
+                  Image.asset('assets/branding/app_icon.png',
+                      width: 72, height: 72),
                   const SizedBox(height: 16),
                   Text('Videoader · FFmpeg Studio',
                       textAlign: TextAlign.center,

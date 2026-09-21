@@ -39,4 +39,5 @@ enum DownloadStatus {
   downloading,
   completed,
   failed,
+  skipped,
 }

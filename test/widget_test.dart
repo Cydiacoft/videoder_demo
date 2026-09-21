@@ -62,13 +62,23 @@ void main() {
     await tester.tap(find.text('关于 Videoader'));
     await tester.pumpAndSettle();
     expect(find.text('检查更新'), findsOneWidget);
-    expect(find.text('版本 1.0.0+1'), findsOneWidget);
+    expect(find.text('版本 1.1.0+2'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byType(Switch));
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
     expect(find.text('网络下载'), findsOneWidget);
+    await tester.tap(find.text('网络下载'));
+    await tester.pumpAndSettle();
+    expect(find.text('等待下载任务…'), findsNothing);
+    await tester.tap(find.byTooltip('展开下载日志'));
+    await tester.pumpAndSettle();
+    expect(find.text('等待下载任务…'), findsOneWidget);
+    await tester.tap(find.byTooltip('收起下载日志'));
+    await tester.pumpAndSettle();
+    expect(find.text('等待下载任务…'), findsNothing);
+
     await tester.tap(find.text('下载与 Cookie').first);
     await tester.pumpAndSettle();
     expect(find.text('Cookie 管理'), findsOneWidget);
@@ -203,7 +213,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 150));
     });
     await tester.pumpAndSettle();
-    expect(find.text('版本 1.0.0+1'), findsOneWidget);
+    expect(find.text('版本 1.1.0+2'), findsOneWidget);
     await expectLater(find.byType(MaterialApp),
         matchesGoldenFile('../docs/screenshots/about.png'));
     await tester.pageBack();
@@ -226,6 +236,21 @@ void main() {
     await tester.pumpAndSettle();
     await expectLater(find.byType(MaterialApp),
         matchesGoldenFile('../docs/screenshots/expert-command.png'));
+
+    final scope =
+        ProviderScope.containerOf(tester.element(find.byType(MainLayout)));
+    await scope
+        .read(extensionManagerProvider.notifier)
+        .setEnabled('yt-dlp', true);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('网络下载'));
+    await tester.pumpAndSettle();
+    await expectLater(find.byType(MaterialApp),
+        matchesGoldenFile('../docs/screenshots/download.png'));
+    await tester.tap(find.byTooltip('展开下载日志'));
+    await tester.pumpAndSettle();
+    await expectLater(find.byType(MaterialApp),
+        matchesGoldenFile('../docs/screenshots/download-logs.png'));
     await tester.tap(find.text('格式转换').first);
     await tester.pumpAndSettle();
 

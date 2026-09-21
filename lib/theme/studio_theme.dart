@@ -23,9 +23,9 @@ ThemeData studioTheme(Brightness brightness) {
   final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
   final button = ButtonStyle(
       visualDensity: VisualDensity.standard,
-      minimumSize: const WidgetStatePropertyAll(Size(0, 36)),
+      minimumSize: const WidgetStatePropertyAll(Size(0, 32)),
       padding: const WidgetStatePropertyAll(
-          EdgeInsets.symmetric(horizontal: 15, vertical: 10)),
+          EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
       shape: WidgetStatePropertyAll(shape),
       textStyle: const WidgetStatePropertyAll(TextStyle(
           fontFamily: 'Microsoft YaHei UI',
@@ -59,7 +59,7 @@ ThemeData studioTheme(Brightness brightness) {
         bodySmall: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
         titleMedium: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         titleLarge: const TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: 0)),
+            fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 0)),
     appBarTheme: AppBarTheme(
         toolbarHeight: 64,
         backgroundColor: colors.surface,
@@ -85,7 +85,7 @@ ThemeData studioTheme(Brightness brightness) {
         focusedBorder:
             border.copyWith(borderSide: BorderSide(color: colors.primary)),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+            const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
         labelStyle: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
     filledButtonTheme: FilledButtonThemeData(style: button),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -112,7 +112,7 @@ class StudioPanel extends StatelessWidget {
   const StudioPanel(
       {super.key,
       required this.child,
-      this.padding = const EdgeInsets.all(22)});
+      this.padding = const EdgeInsets.all(18)});
   final Widget child;
   final EdgeInsetsGeometry padding;
   @override
@@ -120,7 +120,8 @@ class StudioPanel extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+          side:
+              BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
       clipBehavior: Clip.antiAlias,
       child: Padding(padding: padding, child: child));
 }

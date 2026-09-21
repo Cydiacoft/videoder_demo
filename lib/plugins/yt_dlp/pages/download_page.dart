@@ -17,6 +17,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
   final _urls = TextEditingController();
   bool _batchRunning = false;
   bool _stopQueue = false;
+  bool _logsExpanded = false;
   @override
   void dispose() {
     _stopQueue = true;
@@ -38,6 +39,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
     ref.read(downloadQueueProvider.notifier).state = true;
     setState(() {
       _batchRunning = true;
+      _logsExpanded = true;
       _stopQueue = false;
     });
     try {
@@ -91,16 +93,19 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
           SizedBox(
               width: 160,
               child: DropdownButtonFormField<DownloadFormat>(
+                  isExpanded: true,
                   initialValue: settings.format,
                   decoration: const InputDecoration(labelText: '下载内容'),
                   items: DownloadFormat.values
                       .map((v) => DropdownMenuItem(
-                          value: v, child: Text(['视频', '音频', '封面'][v.index])))
+                          value: v,
+                          child: Text(['视频＋音频', '音频', '封面'][v.index])))
                       .toList(),
                   onChanged: busy ? null : (v) => notifier.setFormat(v!))),
           SizedBox(
               width: 160,
               child: DropdownButtonFormField<VideoQuality>(
+                  isExpanded: true,
                   initialValue: settings.quality,
                   decoration: const InputDecoration(labelText: '画质'),
                   items: VideoQuality.values
@@ -120,6 +125,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
           SizedBox(
               width: 210,
               child: DropdownButtonFormField<DownloadMode>(
+                  isExpanded: true,
                   initialValue: settings.downloadMode,
                   decoration: const InputDecoration(labelText: '下载器'),
                   items: DownloadMode.values
@@ -145,6 +151,11 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
                       '',
                 })),
         const SizedBox(height: 14),
+        if (settings.format == DownloadFormat.video)
+          const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text('视频与音频自动合并为 MKV，完成后校验音轨。可在下载参数中修改合并容器。',
+                  style: TextStyle(fontSize: 12))),
         Text('保存到：${settings.downloadPath ?? '请在设置与扩展中配置'}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -200,7 +211,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
                   Text(task.url, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle:
                   task.errorMessage == null ? null : Text(task.errorMessage!),
-              trailing: Text(['等待', '下载中', '完成', '失败'][task.status.index],
+              trailing: Text(['等待', '下载中', '完成', '失败', '跳过'][task.status.index],
                   style: const TextStyle(fontSize: 12))),
       ])),
       if (busy) const LinearProgressIndicator(minHeight: 2),
@@ -212,28 +223,43 @@ class _DownloadPageState extends ConsumerState<DownloadPage> {
           child: Row(children: [
             const Icon(Icons.terminal, size: 15),
             const SizedBox(width: 8),
-            const Text('下载日志', style: TextStyle(fontSize: 12)),
-            const Spacer(),
+            Expanded(
+                child: InkWell(
+                    onTap: () => setState(() => _logsExpanded = !_logsExpanded),
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                            _logsExpanded ? '下载日志 · 点击收起' : '下载日志 · 点击展开',
+                            style: const TextStyle(fontSize: 12))))),
+            IconButton(
+                tooltip: _logsExpanded ? '收起下载日志' : '展开下载日志',
+                onPressed: () => setState(() => _logsExpanded = !_logsExpanded),
+                icon: Icon(
+                    _logsExpanded ? Icons.expand_more : Icons.expand_less,
+                    size: 16)),
             TextButton(
                 onPressed: () => ref.read(appLogsProvider.notifier).clear(),
                 child: const Text('清空'))
           ])),
-      SizedBox(
-          height: 150,
-          child: SingleChildScrollView(
-              reverse: true,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: SelectableText(logs.isEmpty ? '等待下载任务…' : logs.join('\n'),
-                  style: TextStyle(
-                      fontFamily: 'Consolas',
-                      fontFamilyFallback: const [
-                        'Microsoft YaHei UI',
-                        'Microsoft YaHei',
-                        'PingFang SC',
-                        'Noto Sans CJK SC'
-                      ],
-                      fontSize: 12,
-                      color: colors.onSurfaceVariant)))),
+      if (_logsExpanded)
+        SizedBox(
+            height: 150,
+            child: SingleChildScrollView(
+                reverse: true,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: SelectableText(
+                    logs.isEmpty ? '等待下载任务…' : logs.join('\n'),
+                    style: TextStyle(
+                        fontFamily: 'Consolas',
+                        fontFamilyFallback: const [
+                          'Microsoft YaHei UI',
+                          'Microsoft YaHei',
+                          'PingFang SC',
+                          'Noto Sans CJK SC'
+                        ],
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant)))),
     ]);
   }
 }
